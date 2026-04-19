@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "Report": {
+      "title": "Report",
+      "description": "A community need report submitted by a field worker.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reporterName": { "type": "string" },
+        "phone": { "type": "string" },
+        "location": { "type": "string" },
+        "coordinates": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "problemType": { "type": "string", "enum": ["Food", "Water", "Medical", "Shelter", "Education", "Other"] },
+        "description": { "type": "string" },
+        "peopleAffected": { "type": "number" },
+        "selfUrgency": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "aiScore": { "type": "number" },
+        "aiReason": { "type": "string" },
+        "aiCategory": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["open", "assigned", "resolved"] },
+        "assignedVolunteerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reporterName", "problemType", "description", "status", "createdAt"]
+    },
+    "Volunteer": {
+      "title": "Volunteer",
+      "description": "A community volunteer registered in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "location": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "availability": { "type": "string" },
+        "languages": { "type": "string" },
+        "isAvailable": { "type": "boolean" },
+        "assignedTaskId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "isAvailable", "createdAt"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "A record of a volunteer assigned to a report.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reportId": { "type": "string" },
+        "volunteerId": { "type": "string" },
+        "assignedAt": { "type": "string", "format": "date-time" },
+        "resolvedAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["reportId", "volunteerId", "assignedAt", "status"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Application user with role information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["field_worker", "coordinator"] }
+      },
+      "required": ["uid", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Collection of community need reports."
+    },
+    "/volunteers/{volunteerId}": {
+      "schema": "Volunteer",
+      "description": "Collection of available volunteers."
+    },
+    "/assignments/{assignmentId}": {
+      "schema": "Assignment",
+      "description": "Collection of volunteer assignments."
+    },
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles and roles."
+    }
+  }
+}

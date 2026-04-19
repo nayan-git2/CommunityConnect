@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - role: string (required, enum: ['field_worker', 'coordinator'])
+    //
+    // Collection: reports
+    // Document ID: {reportId}
+    // Fields:
+    //   - reporterName, problemType, description, status, createdAt (required)
+    //   - aiScore, aiReason, aiCategory, photoUrl, assignedVolunteerId (optional)
+    //
+    // Collection: volunteers
+    // Document ID: {volunteerId}
+    // Fields:
+    //   - name, email, isAvailable, createdAt (required)
+    //   - skills, phone, location, availability, languages (optional)
+    //
+    // Collection: assignments
+    // Document ID: {assignmentId}
+    // Fields:
+    //   - reportId, volunteerId, assignedAt, status (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isCoordinator() {
+      return isAuthenticated() && getUserData().role == 'coordinator';
+    }
+
+    function isFieldWorker() {
+      return isAuthenticated() && getUserData().role == 'field_worker';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (getUserData().role == 'admin' ||
+         (request.auth.token.email == "bhoyarn340@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /_connection_test_/{docId} {
+      allow read: if true;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isCoordinator();
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update: if isOwner(uid) && (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /reports/{reportId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isFieldWorker() || isCoordinator());
+      allow update: if isCoordinator();
+      allow delete: if isAdmin();
+    }
+
+    match /volunteers/{volunteerId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isCoordinator();
+      allow delete: if isAdmin();
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isCoordinator();
+      allow delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "CommunityConnect",
+  "description": "Smart Volunteer Coordination System for NGOs and social groups. Uses AI to score urgency and match volunteers to community needs.",
+  "requestFramePermissions": ["geolocation"]
+}
